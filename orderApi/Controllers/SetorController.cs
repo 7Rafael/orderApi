@@ -13,23 +13,23 @@ namespace orderApi.Controllers
     [ApiController]
     public class SetorController : ControllerBase
     {
-        private readonly IRepository<Setor> _repository;
-        public SetorController(IRepository<Setor> repository)
+        private readonly IUnityOfWork _uof;
+        public SetorController(IUnityOfWork uof)
         {
-            _repository = repository;
+            _uof = uof;
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Setor>> Get()
         {
-            var setors = _repository.GetAll();
+            var setors = _uof.SetorRepository.GetAll();
             return Ok(setors);
         }
 
         [HttpGet("{id:int}", Name = "ObterSetor")]
         public ActionResult<Setor> Get(int id)
         {
-            var setor = _repository.Get(s => s.SetorId == id);
+            var setor = _uof.SetorRepository.Get(s => s.SetorId == id);
             return Ok(setor);
         }
         [HttpPost]
@@ -39,7 +39,8 @@ namespace orderApi.Controllers
             {
                 return BadRequest();
             }
-            var createdSetor = _repository.Create(setor);
+            var createdSetor = _uof.SetorRepository.Create(setor);
+            _uof.Commit();
             return new CreatedAtRouteResult("ObterSetor", new { id = createdSetor.SetorId }, createdSetor);
         }
         [HttpPut("{id:int}")]
@@ -49,20 +50,21 @@ namespace orderApi.Controllers
             {
                 return BadRequest();
             }
-            _repository.Update(setor);
+            _uof.SetorRepository.Update(setor);
+            _uof.Commit();
             return Ok(setor);
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var setor = _repository.Get(s => s.SetorId == id);
+            var setor = _uof.SetorRepository.Get(s => s.SetorId == id);
             if (setor is null)
             {
                 return NotFound();
             }
-            var deletedSetor = _repository.Delete(setor);
-
+            var deletedSetor = _uof.SetorRepository.Delete(setor);
+            _uof.Commit();
             return Ok(deletedSetor);
         }
     }

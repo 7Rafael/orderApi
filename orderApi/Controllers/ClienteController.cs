@@ -13,26 +13,26 @@ namespace orderApi.Controllers
     public class ClienteController : ControllerBase
     {
         private readonly IClienteRepository _clienteRepository;
-        private readonly IRepository<Cliente> _repository;
+        private readonly IUnityOfWork _uof;
 
-        public ClienteController(IRepository<Cliente> repository,
-            IClienteRepository clienteRepository)
+        public ClienteController(IClienteRepository clienteRepository,
+            IUnityOfWork uof)
         {
-            _repository = repository;
             _clienteRepository = clienteRepository;
+            _uof = uof;
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Cliente>> Get()
         {
-            var clientes = _repository.GetAll();
+            var clientes = _uof.ClienteRepository.GetAll();
             return Ok(clientes);
         }
 
         [HttpGet("{id:int}", Name = "ObterCliente")]
         public ActionResult<Cliente> Get(int id)
         {
-            var cliente = _repository.Get(c => c.ClienteId == id);
+            var cliente = _uof.ClienteRepository.Get(c => c.ClienteId == id);
             return Ok(cliente);
         }
 
@@ -63,20 +63,22 @@ namespace orderApi.Controllers
             {
                 return BadRequest();
             }
-            _repository.Update(cliente);
+            _uof.ClienteRepository.Update(cliente);
+            _uof.Commit();
             return Ok(cliente);
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var cliente = _repository.Get(c => c.ClienteId == id);
+            var cliente = _uof.ClienteRepository.Get(c => c.ClienteId == id);
             if (cliente == null)
             {
                 return NotFound();
             }
 
-            var deletedCliente = _repository.Delete(cliente);
+            var deletedCliente = _uof.ClienteRepository.Delete(cliente);
+            _uof.Commit();
             return Ok(deletedCliente);
         }
     }

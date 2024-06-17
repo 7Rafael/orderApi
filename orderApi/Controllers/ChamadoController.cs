@@ -13,24 +13,25 @@ namespace orderApi.Controllers
     public class ChamadoController : ControllerBase
     {
         private readonly IChamadoRepository _chamadoRepository;
-        private readonly IRepository<Chamado> _repository;
-        public ChamadoController(IRepository<Chamado> repository,
-            IChamadoRepository chamadoRepository)
+        private readonly IUnityOfWork _uof;
+        public ChamadoController(IChamadoRepository chamadoRepository,
+            IUnityOfWork uof)
         {
             _chamadoRepository = chamadoRepository;
-            _repository = repository;
+            _uof = uof;
         }
         [HttpGet]
         public ActionResult<IEnumerable<Chamado>> GetAll()
         {
-            var chamados = _repository.GetAll();
+            var chamados = _uof.ChamadoRepository.GetAll();
+            
             return Ok(chamados);
         }
 
         [HttpGet("{id:int}", Name = "ObterChamado")]
         public ActionResult<Chamado> Get(int id)
         {
-            var chamado = _repository.Get(c => c.ChamadoId == id);
+            var chamado = _uof.ChamadoRepository.Get(c => c.ChamadoId == id);
             return Ok(chamado);
         }
         [HttpPost("Create")]
@@ -39,6 +40,7 @@ namespace orderApi.Controllers
             try
             {
                 var chamadoCriado = await _chamadoRepository.CreateAsync(chamado, clienteId, setorId);
+
                 return Ok(chamadoCriado);
             }
             catch (KeyNotFoundException ex)
@@ -47,33 +49,26 @@ namespace orderApi.Controllers
             }
             catch (Exception ex)
             {
-                // Trate outros erros
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        /*
-        [HttpPost]
-        public ActionResult Post(Chamado chamado)
-        {
-            var createdChamado = _repository.Create(chamado);
-            return new CreatedAtRouteResult("ObterChamado", new { id = createdChamado.ChamadoId }, createdChamado);
-        }
-        */
         [HttpPut("{id:int}")]
         public ActionResult Put(Chamado chamado)
         {
 
-            _repository.Update(chamado);
+            _uof.ChamadoRepository.Update(chamado);
+            _uof.Commit();
             return Ok(chamado);
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var chamado = _repository.Get(c => c.ChamadoId == id);
+            var chamado = _uof.ChamadoRepository.Get(c => c.ChamadoId == id);
 
-            var deletedChamado = _repository.Delete(chamado);
+            var deletedChamado = _uof.ChamadoRepository.Delete(chamado);
+            _uof.Commit();
             return Ok(deletedChamado);
         }
     }

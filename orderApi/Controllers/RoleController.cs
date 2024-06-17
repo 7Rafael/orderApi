@@ -12,24 +12,24 @@ namespace orderApi.Controllers
     [ApiController]
     public class RoleController : ControllerBase
     {
-        private readonly IRepository<Role> _repository;
+        private readonly IUnityOfWork _uof;
 
-        public RoleController(IRepository<Role> repository)
+        public RoleController(IUnityOfWork uof)
         {
-            _repository = repository;
+            _uof = uof;
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Role>> Get()
         {
-            var role = _repository.GetAll();
+            var role = _uof.RoleRepository.GetAll();
             return Ok(role);
         }
 
         [HttpGet("{id:int}", Name = "ObterRole")]
         public ActionResult<Role> Get(int id)
         {
-            var role = _repository.Get(r => r.RoleId == id);
+            var role = _uof.RoleRepository.Get(r => r.RoleId == id);
             return Ok(role);
         }
         [HttpPost]
@@ -39,7 +39,8 @@ namespace orderApi.Controllers
             {
                 return BadRequest();
             }
-            var createdRole = _repository.Create(role);
+            var createdRole = _uof.RoleRepository.Create(role);
+            _uof.Commit();
             return new CreatedAtRouteResult("ObterRole", new { id = createdRole.RoleId }, createdRole);
         }
         [HttpPut("{id:int}")]
@@ -49,19 +50,21 @@ namespace orderApi.Controllers
             {
                 return BadRequest();
             }
-            _repository.Update(role);
+            _uof.RoleRepository.Update(role);
+            _uof.Commit();
             return Ok(role);
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var role =_repository.Get(r => r.RoleId == id);
+            var role = _uof.RoleRepository.Get(r => r.RoleId == id);
             if (role is null)
             {
                 return NotFound();
             }
-            var deletedRole = _repository.Delete(role);
+            var deletedRole = _uof.RoleRepository.Delete(role);
+            _uof.Commit();
 
             return Ok(deletedRole);
         }
