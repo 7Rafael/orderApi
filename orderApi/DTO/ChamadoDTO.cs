@@ -1,8 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using orderApi.Model;
+using orderApi.Validations;
+using System.ComponentModel.DataAnnotations;
 
-namespace orderApi.Model
+namespace orderApi.DTO
 {
-    public class Chamado
+    public class ChamadoDTO
     {
 
         [Key]
@@ -15,12 +17,11 @@ namespace orderApi.Model
         [StringLength(500)]
         public string? Descricao { get; set; }
 
-        [Required]  
+        [Required]
         public DateTime CreatedDate { get; set; }
 
         [Required]
         public int SetorId { get; set; }
         public Setor? Setor { get; set; }
     }
-
 }
