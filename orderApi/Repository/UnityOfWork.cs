@@ -1,30 +1,19 @@
 ﻿using orderApi.Context;
 using orderApi.Repository.ChamadoRepositories;
-using orderApi.Repository.ClienteRepositories;
-using orderApi.Repository.RoleRepositories;
 using orderApi.Repository.SetorRepositories;
 
 namespace orderApi.Repository
 {
     public class UnityOfWork : IUnityOfWork
     {
-        private IClienteRepository? _clienteRepo;
         private IChamadoRepository? _chamadoRepo;
-        private IRoleRepository? _roleRepo;
         private ISetorRepository? _setorRepo;
         public AppDbContext _context;
         public UnityOfWork(AppDbContext context)
         {
             _context = context;
         }
-        public IClienteRepository ClienteRepository
-        {
-            get
-            {
-                return _clienteRepo = _clienteRepo ?? new ClienteRepository(_context);
-            }
 
-        }
         public IChamadoRepository ChamadoRepository
         {
             get
@@ -34,14 +23,6 @@ namespace orderApi.Repository
 
         }
 
-        public IRoleRepository  RoleRepository
-        {
-            get
-            {
-                return _roleRepo = _roleRepo ?? new RoleRepository(_context);
-            }
-
-        }
 
         public ISetorRepository SetorRepository
         {

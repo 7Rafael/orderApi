@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using orderApi.Context;
+using orderApi.DTO;
 using orderApi.Model;
 using orderApi.Repository;
 using orderApi.Repository.ChamadoRepositories;
@@ -14,34 +18,45 @@ namespace orderApi.Controllers
     {
         private readonly IChamadoRepository _chamadoRepository;
         private readonly IUnityOfWork _uof;
+        private readonly IMapper _mapper;
         public ChamadoController(IChamadoRepository chamadoRepository,
-            IUnityOfWork uof)
+            IUnityOfWork uof, IMapper mapper)
         {
             _chamadoRepository = chamadoRepository;
             _uof = uof;
+            _mapper = mapper;
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
-        public ActionResult<IEnumerable<Chamado>> GetAll()
+        public ActionResult<IEnumerable<ChamadoDTO>> GetAll()
         {
-            var chamados = _uof.ChamadoRepository.GetAll();
-            
-            return Ok(chamados);
-        }
 
-        [HttpGet("{id:int}", Name = "ObterChamado")]
-        public ActionResult<Chamado> Get(int id)
-        {
-            var chamado = _uof.ChamadoRepository.Get(c => c.ChamadoId == id);
-            return Ok(chamado);
+            var chamados = _uof.ChamadoRepository.GetAll();
+            var chamadosDto = _mapper.Map<IEnumerable<ChamadoDTO>>(chamados);
+            return Ok(chamadosDto);
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("{id:int}", Name = "ObterChamado")]
+        public ActionResult<ChamadoDTO> Get(int id)
+        {
+
+            var chamado = _uof.ChamadoRepository.Get(c => c.ChamadoId == id);
+            var chamadoDto = _mapper.Map<ChamadoDTO>(chamado);
+            return Ok(chamadoDto);
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("Create")]
-        public async Task<ActionResult> Post(Chamado chamado, int clienteId, int setorId)
+        public async Task<ActionResult> Post(ChamadoDTO chamadoDto, int clienteId, int setorId)
         {
             try
             {
-                var chamadoCriado = await _chamadoRepository.CreateAsync(chamado, clienteId, setorId);
 
-                return Ok(chamadoCriado);
+
+                var chamado = _mapper.Map<Chamado>(chamadoDto);
+                var newChamado = await _chamadoRepository.CreateAsync(chamado, clienteId, setorId);
+                var newChamadoDto = _mapper.Map<ChamadoDTO>(newChamado);
+
+                return Ok(newChamadoDto);
             }
             catch (KeyNotFoundException ex)
             {
@@ -52,24 +67,53 @@ namespace orderApi.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
-
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id:int}")]
-        public ActionResult Put(Chamado chamado)
+        public ActionResult Put(ChamadoDTO chamadoDto)
         {
 
-            _uof.ChamadoRepository.Update(chamado);
+            /*
+            var cliente = _mapper.Map<Cliente>(clienteDto);
+
+            var newCliente = _uof.ClienteRepository.Update(cliente);
+
             _uof.Commit();
-            return Ok(chamado);
-        }
+            var newClienteDto = _mapper.Map<ClienteDTO>(newCliente);
 
+            return Ok(newClienteDto);
+             
+             */
+            var chamado = _mapper.Map<Chamado>(chamadoDto);
+            var newChamado =_uof.ChamadoRepository.Update(chamado);
+            _uof.Commit();
+            var newChamadoDto = _mapper.Map<ChamadoDTO>(newChamado);
+            return Ok(newChamadoDto);
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpDelete("{id:int}")]
-        public ActionResult Delete(int id)
+        public ActionResult<ChamadoDTO> Delete(int id)
         {
+
+            /*
+
+            _uof.Commit();
+            var deletedClienteDto = _mapper.Map<ClienteDTO>(deletedCliente);
+            return Ok(deletedClienteDto);
+             
+             */
+
+
+
             var chamado = _uof.ChamadoRepository.Get(c => c.ChamadoId == id);
+            if(chamado == null)
+            {
+                return NotFound();
+            }
 
             var deletedChamado = _uof.ChamadoRepository.Delete(chamado);
             _uof.Commit();
-            return Ok(deletedChamado);
+            var deletedChamadoDto = _mapper.Map<ChamadoDTO>(deletedChamado);
+            return Ok(deletedChamadoDto);
         }
     }
 }

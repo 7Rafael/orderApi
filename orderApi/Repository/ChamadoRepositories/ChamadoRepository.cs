@@ -13,13 +13,9 @@ namespace orderApi.Repository.ChamadoRepositories
         public async Task<Chamado> CreateAsync(Chamado chamado, int clienteId, int setorId)
         {
             {
-                var cliente = await _context.Clientes.FindAsync(clienteId);
 
-                if (cliente == null)
-                {
-                    // Trate o caso em que a cliente não é encontrada
-                    throw new KeyNotFoundException("Cliente not found");
-                }
+
+
 
                 var setor = await _context.Setores.FindAsync(setorId);
 
@@ -30,8 +26,6 @@ namespace orderApi.Repository.ChamadoRepositories
                 }
 
 
-                chamado.ClienteId = clienteId;
-                chamado.Cliente = cliente;
                 chamado.SetorId = setorId;
                 chamado.Setor = setor;
 
